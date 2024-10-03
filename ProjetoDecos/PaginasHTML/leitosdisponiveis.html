@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leitos Disponíveis - Decós Hospital</title>
+    <link rel="stylesheet" href="leitos.css">
+</head>
+<body>
+    <div class="leitos-container">
+        <div class="logo">
+            <img src="decos.png" alt="Logo Decós Hospital">
+        </div>
+        <div class="leitos-box">
+            <h2>Leitos Disponíveis</h2>
+            <div class="leitos-grid" id="leitosDisponiveis"></div> <!-- Para exibir os leitos disponíveis -->
+            <a href="gestao.html">
+                <button type="button">Voltar</button>
+            </a>
+        </div>
+    </div>
+    
+    <script>
+        // Recuperar os leitos disponíveis do localStorage e exibi-los
+        const leitosDisponiveis = JSON.parse(localStorage.getItem('leitosDisponiveis')) || [];
+        const leitosGrid = document.getElementById('leitosDisponiveis');
+
+        // Função para exibir leitos disponíveis
+        function exibirLeitos() {
+            leitosGrid.innerHTML = ''; // Limpar a grid antes de exibir
+            leitosDisponiveis.forEach((leito, index) => {
+                const leitoDiv = document.createElement('div');
+                leitoDiv.classList.add('leito-item');
+                leitoDiv.innerHTML = `
+                    <span>Leito ${leito.numero || 'N/A'} - Limpo por <strong>${leito.responsavel || 'N/A'}</strong> às <strong>${leito.horario || 'N/A'}</strong></span>
+                    <button onclick="marcarComoPendente(${index})">Marcar como Pendente</button>
+                `;
+                leitosGrid.appendChild(leitoDiv);
+            });
+        }
+
+        // Exibir os leitos ao carregar a página
+        exibirLeitos();
+
+        // Função para marcar o leito como pendente
+        function marcarComoPendente(index) {
+            const leito = leitosDisponiveis[index]; // Obter leito
+            if (leito && leito.numero) { // Verifica se leito existe e tem número
+                leito.pendenteDesde = new Date().toLocaleString('pt-BR'); // Armazena o horário atual como data de pendência
+                let horarioLimpeza = leito.horario || new Date().toLocaleString('pt-BR'); // Armazena o horário de limpeza
+                leito.horario = horarioLimpeza; // Adiciona ao leito o horário de limpeza
+                leitosDisponiveis.splice(index, 1); // Remover leito dos disponíveis
+                let leitosPendentes = JSON.parse(localStorage.getItem('leitosPendentes')) || [];
+                leitosPendentes.push(leito); // Adicionar leito aos pendentes
+                localStorage.setItem('leitosDisponiveis', JSON.stringify(leitosDisponiveis));
+                localStorage.setItem('leitosPendentes', JSON.stringify(leitosPendentes));
+                exibirLeitos(); // Atualizar a lista na tela
+            } else {
+                // Se o leito não tem número, removê-lo do localStorage
+                if (leito) {
+                    alert(`Leito inválido encontrado. Removendo leito: ${JSON.stringify(leito)}`);
+                    leitosDisponiveis.splice(index, 1); // Remove o leito inválido
+                    localStorage.setItem('leitosDisponiveis', JSON.stringify(leitosDisponiveis));
+                    exibirLeitos(); // Atualizar a lista na tela
+                } else {
+                    console.error("Leito não encontrado.");
+                }
+            }
+        }
+    </script>
+</body>
+</html>
